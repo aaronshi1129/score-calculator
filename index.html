@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .criteria-row {
+            transition: all 0.3s ease;
+        }
+        
+        .criteria-row:hover {
+            transform: translateX(5px);
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(90deg, #06b6d4, #3b82f6);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gradient:hover {
+            background: linear-gradient(90deg, #0891b2, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(90deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        
+        .result-card {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .result-card.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .percentage-badge {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .percentage-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.3), rgba(59, 130, 246, 0.3));
+            transform: translateX(-100%);
+            transition: transform 0.5s ease;
+        }
+        
+        .percentage-badge.animate::before {
+            transform: translateX(0);
+        }
+        
+        .footer-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .footer-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            background: rgba(6, 182, 212, 0.9);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="toast" class="toast">Data saved successfully!</div>
+    
+    <div class="max-w-4xl mx-auto">
+        <div class="glass rounded-2xl p-6 md:p-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-cyan-400 mb-2 text-center">Score Calculator</h1>
+            <p class="text-white/80 text-center mb-8">Calculate your final score based on weighted criteria</p>
+            
+            <div class="mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-white mb-2 md:mb-0">Criteria</h2>
+                    <div class="flex items-center gap-3">
+                        <span id="percentageTotal" class="text-white mr-1 font-medium">Total: 0%</span>
+                        <button id="clearAllBtn" class="btn-danger text-white px-4 py-2 rounded-lg font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            Clear All
+                        </button>
+                        <button id="addCriteria" class="btn-gradient text-white px-4 py-2 rounded-lg font-medium flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Add Criteria
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="criteriaContainer" class="space-y-3 mb-6">
+                    <!-- Criteria rows will be added here -->
+                </div>
+                
+                <div class="flex justify-center">
+                    <button id="calculateBtn" class="btn-gradient text-white px-6 py-3 rounded-lg font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Calculate Final Score
+                    </button>
+                </div>
+            </div>
+            
+            <div id="resultCard" class="result-card bg-slate-800 rounded-xl p-6 shadow-lg border border-cyan-500/30">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-4">Final Score</h3>
+                <div class="space-y-4 mb-6">
+                    <div id="resultBreakdown" class="space-y-3">
+                        <!-- Result breakdown will be added here -->
+                    </div>
+                </div>
+                <div class="flex justify-between items-center bg-slate-700/50 p-4 rounded-lg border border-cyan-500/20">
+                    <span class="text-lg font-medium text-white">Final Score:</span>
+                    <span id="finalScore" class="text-2xl font-bold text-cyan-400">0</span>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-4 border-t border-white/10 flex justify-center text-white/60 text-sm">
+                <a href="https://sites.google.com/view/aaronshi" target="_blank" class="flex items-center hover:text-cyan-400 transition-colors footer-icon">
+                    <img src="https://alittlemoreenglish.weebly.com/uploads/2/6/6/3/26638990/favicon-32x32_orig.png" alt="Aaron Shi" class="w-5 h-5 mr-2">
+                    <span>Released in April 2025. Created by Aaron Shi.</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const criteriaContainer = document.getElementById('criteriaContainer');
+            const addCriteriaBtn = document.getElementById('addCriteria');
+            const clearAllBtn = document.getElementById('clearAllBtn');
+            const calculateBtn = document.getElementById('calculateBtn');
+            const percentageTotal = document.getElementById('percentageTotal');
+            const resultCard = document.getElementById('resultCard');
+            const resultBreakdown = document.getElementById('resultBreakdown');
+            const finalScoreElement = document.getElementById('finalScore');
+            const toast = document.getElementById('toast');
+            
+            // Hide result card initially
+            resultCard.style.display = 'none';
+            
+            // Load saved criteria from localStorage
+            loadSavedCriteria();
+            
+            // Add criteria event
+            addCriteriaBtn.addEventListener('click', function() {
+                addCriteria();
+                saveCriteria();
+            });
+            
+            // Clear all event
+            clearAllBtn.addEventListener('click', clearAllCriteria);
+            
+            // Calculate event
+            calculateBtn.addEventListener('click', calculateScore);
+            
+            function addCriteria(name = '', percentage = '', score = '') {
+                const criteriaId = Date.now();
+                const criteriaRow = document.createElement('div');
+                criteriaRow.className = 'criteria-row flex flex-col md:flex-row gap-3 bg-slate-700/50 p-4 rounded-lg border border-cyan-500/20';
+                criteriaRow.innerHTML = `
+                    <div class="flex-grow">
+                        <input type="text" class="w-full bg-slate-600/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500 criteria-name" 
+                            placeholder="Criteria name" data-criteria-id="${criteriaId}" value="${name}">
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-24 relative">
+                            <input type="number" min="0" max="100" class="w-full bg-slate-600/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500 percentage-input" 
+                                placeholder="%" data-criteria-id="${criteriaId}" value="${percentage}">
+                            <span class="absolute right-3 top-2 text-white/70">%</span>
+                        </div>
+                        <div class="w-24">
+                            <input type="number" min="0" max="100" class="w-full bg-slate-600/50 border border-cyan-500/30 rounded-lg px-4 py-2 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-cyan-500 score-input" 
+                                placeholder="Score" data-criteria-id="${criteriaId}" value="${score}">
+                        </div>
+                        <button class="delete-criteria bg-red-500/20 hover:bg-red-500/40 text-white p-2 rounded-lg transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                criteriaContainer.appendChild(criteriaRow);
+                
+                // Add event listeners to new elements
+                const deleteBtn = criteriaRow.querySelector('.delete-criteria');
+                deleteBtn.addEventListener('click', function() {
+                    criteriaRow.remove();
+                    updatePercentageTotal();
+                    saveCriteria();
+                });
+                
+                const percentageInput = criteriaRow.querySelector('.percentage-input');
+                percentageInput.addEventListener('input', function() {
+                    updatePercentageTotal();
+                    saveCriteria();
+                });
+                
+                const nameInput = criteriaRow.querySelector('.criteria-name');
+                nameInput.addEventListener('input', saveCriteria);
+                
+                const scoreInput = criteriaRow.querySelector('.score-input');
+                scoreInput.addEventListener('input', saveCriteria);
+                
+                updatePercentageTotal();
+            }
+            
+            function updatePercentageTotal() {
+                const percentageInputs = document.querySelectorAll('.percentage-input');
+                let total = 0;
+                
+                percentageInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    total += value;
+                });
+                
+                percentageTotal.textContent = `Total: ${total}%`;
+                
+                // Enable/disable calculate button based on total percentage
+                if (total === 100 && criteriaContainer.children.length >= 2) {
+                    calculateBtn.disabled = false;
+                } else {
+                    calculateBtn.disabled = true;
+                }
+                
+                // Visual feedback for percentage total
+                if (total === 100) {
+                    percentageTotal.classList.add('text-cyan-300');
+                    percentageTotal.classList.remove('text-white', 'text-red-300');
+                } else if (total > 100) {
+                    percentageTotal.classList.add('text-red-300');
+                    percentageTotal.classList.remove('text-white', 'text-cyan-300');
+                } else {
+                    percentageTotal.classList.add('text-white');
+                    percentageTotal.classList.remove('text-cyan-300', 'text-red-300');
+                }
+            }
+            
+            function calculateScore() {
+                const criteria = [];
+                const criteriaRows = criteriaContainer.querySelectorAll('.criteria-row');
+                
+                criteriaRows.forEach(row => {
+                    const id = row.querySelector('[data-criteria-id]').getAttribute('data-criteria-id');
+                    const name = row.querySelector('.criteria-name').value || 'Unnamed Criteria';
+                    const percentage = parseFloat(row.querySelector('.percentage-input').value) || 0;
+                    const score = parseFloat(row.querySelector('.score-input').value) || 0;
+                    
+                    criteria.push({ id, name, percentage, score });
+                });
+                
+                // Calculate final score
+                let finalScore = 0;
+                resultBreakdown.innerHTML = '';
+                
+                criteria.forEach(item => {
+                    const weightedScore = (item.score * item.percentage) / 100;
+                    finalScore += weightedScore;
+                    
+                    const breakdownItem = document.createElement('div');
+                    breakdownItem.className = 'flex justify-between items-center';
+                    breakdownItem.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="text-white font-medium">${item.name}</span>
+                            <span class="ml-2 percentage-badge bg-cyan-900/50 text-cyan-300 text-xs font-medium px-2.5 py-0.5 rounded-full">${item.percentage}%</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-white/70 mr-2">Score: ${item.score}</span>
+                            <span class="text-cyan-400 font-medium">→ ${weightedScore.toFixed(2)}</span>
+                        </div>
+                    `;
+                    
+                    resultBreakdown.appendChild(breakdownItem);
+                });
+                
+                // Show result card with animation
+                resultCard.style.display = 'block';
+                setTimeout(() => {
+                    resultCard.classList.add('show');
+                    
+                    // Animate percentage badges
+                    const badges = document.querySelectorAll('.percentage-badge');
+                    badges.forEach((badge, index) => {
+                        setTimeout(() => {
+                            badge.classList.add('animate');
+                        }, index * 100);
+                    });
+                }, 100);
+                
+                // Update final score with animation
+                const targetScore = finalScore;
+                let currentScore = 0;
+                const duration = 1000; // 1 second animation
+                const frameRate = 60;
+                const increment = targetScore / (duration / (1000 / frameRate));
+                
+                const animation = setInterval(() => {
+                    currentScore += increment;
+                    if (currentScore >= targetScore) {
+                        currentScore = targetScore;
+                        clearInterval(animation);
+                    }
+                    finalScoreElement.textContent = currentScore.toFixed(2);
+                }, 1000 / frameRate);
+            }
+            
+            // Save criteria to localStorage
+            function saveCriteria() {
+                const criteriaRows = criteriaContainer.querySelectorAll('.criteria-row');
+                const savedCriteria = [];
+                
+                criteriaRows.forEach(row => {
+                    const name = row.querySelector('.criteria-name').value;
+                    const percentage = row.querySelector('.percentage-input').value;
+                    const score = row.querySelector('.score-input').value;
+                    
+                    savedCriteria.push({ name, percentage, score });
+                });
+                
+                localStorage.setItem('scoreCriteria', JSON.stringify(savedCriteria));
+                
+                // Show toast notification
+                showToast('Data saved automatically');
+            }
+            
+            // Load criteria from localStorage
+            function loadSavedCriteria() {
+                const savedCriteria = localStorage.getItem('scoreCriteria');
+                
+                if (savedCriteria) {
+                    const criteria = JSON.parse(savedCriteria);
+                    
+                    if (criteria.length > 0) {
+                        criteria.forEach(item => {
+                            addCriteria(item.name, item.percentage, item.score);
+                        });
+                    } else {
+                        // Add two initial criteria if no saved data
+                        addCriteria();
+                        addCriteria();
+                    }
+                } else {
+                    // Add two initial criteria if no saved data
+                    addCriteria();
+                    addCriteria();
+                }
+            }
+            
+            // Clear all criteria
+            function clearAllCriteria() {
+                criteriaContainer.innerHTML = '';
+                localStorage.removeItem('scoreCriteria');
+                
+                // Add two initial empty criteria
+                addCriteria();
+                addCriteria();
+                
+                // Hide result card
+                resultCard.style.display = 'none';
+                resultCard.classList.remove('show');
+                
+                updatePercentageTotal();
+                
+                // Show toast notification
+                showToast('All criteria cleared');
+            }
+            
+            // Show toast notification
+            function showToast(message) {
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92f7664df1aa8098',t:'MTc0NDUwOTkzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
